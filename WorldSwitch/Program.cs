@@ -9,37 +9,96 @@ using Utilities;
 
 namespace WorldSwitch
 {
-    // the parameters to this program are the names of the two worlds to switch between, and the name of the player to switch.
-    // the program's ini file contains a path to each world's folder.
-    // For instance, if the world to switch from comes in as "world1", then there must be an entry in the ini file like $world1_path=C:\Minecraft\Server1\
-    // and inside this Server1 folder must be the "world" folder.
-    // So for instance:  WorldSwitch.exe world1 world2 PhilipM
-    // will swap PhilipM's inventory between the two worlds.
     class Program
     {
+        static void Usage()
+        {
+            Console.Error.WriteLine("usage: WorldSwitch.exe <inifile> <command> params...");
+            Console.ReadKey();
+        }
+
         static void Main(string[] args)
         {
-            if (args.Length < 4)
+            if (args.Length < 2)
             {
-                Console.WriteLine("usage: WorldSwitch.exe <inifile> <world1> <world2> <player>");
-                Console.ReadKey();
+                Usage();
                 return;
             }
 
-            string inifile = args[0];
-            string world1 = args[1];
-            string world2 = args[2];
-            string player = args[3];
+            var controller = new Controller(args);
+            bool success = controller.PerformCommand();
+            if (!success)
+                Usage();
+        }
+    }
 
-            WorldSwitcher switcher = new WorldSwitcher();
+    class Controller
+    {
+        string[] args;
+        string inifile;
+        string command;
+        VariableBin var;
+
+        public Controller(string[] args)
+        {
+            this.args = args;
+            this.inifile = args[0];
+            this.command = args[1];
+
+            var = new VariableBin();
+            var.LoadFromFile(inifile);
+        }
+
+        public bool PerformCommand()
+        {
+            if (command == "worldswitch")
+                return Try(WorldSwitch);
+            else if (command == "teleport")
+                return Try(Teleport);
+            else if (command == "get_coords")
+                return Try(GetCoords);
+
+            return false;
+        }
+
+        void Teleport()
+        {
+            string player = args[2];
+            string world = args[3];
+            string coords = args[4];
+            var operation = new Teleporter(var);
+            operation.Teleport(player, world, coords);
+        }
+
+        void GetCoords()
+        {
+            string player = args[2];
+            string world = args[3];
+            var operation = new CoordinateGetter(var);
+            operation.GetCoords(player, world);
+        }
+
+        void WorldSwitch()
+        {
+            string player = args[2];
+            string world1 = args[3];
+            string world2 = args[4];
+            var operation = new WorldSwitcher(var);
+            operation.Switch(world1, world2, player);
+        }
+
+        bool Try(Action action)
+        {
             try
             {
-                switcher.Switch(inifile, world1, world2, player);
+                action();
+                Console.WriteLine("success,");
+                return true;
             }
             catch(Exception e)
             {
-                Console.WriteLine(switcher.ErrorMessage);
                 File.WriteAllText("WorldSwitch.exe.log", e.ToString());
+                return false;
             }
         }
     }
@@ -61,20 +120,116 @@ namespace WorldSwitch
         }
     }
 
-    class WorldSwitcher {
-
-        VariableBin var;
+    class Operation
+    {
+        protected VariableBin var;
         public string ErrorMessage = "Error";
 
-        public WorldSwitcher()
+        public Operation(VariableBin var)
         {
+            this.var = var;
         }
 
-        public void Switch(string inifile, string world1, string world2, string player)
+        protected string PlayerDirectory(string worldname)
         {
-            var = new VariableBin();
-            var.LoadFromFile(inifile);
+            return Path.Combine(var.Str[worldname], "players");
+        }
 
+        protected NbtHolder LoadPlayer(string world, string player)
+        {
+            var playerDir = PlayerDirectory(world);
+            if (!Directory.Exists(playerDir))
+                ErrorMessage = string.Format("player folder not found for world: {0}", world);
+            string playerFile = Path.Combine(playerDir, player + ".dat");
+            if (!File.Exists(playerFile))
+                ErrorMessage = string.Format("player file not found for world: {0} and player: {1}", world, player);
+
+            return LoadNbt(playerFile);
+        }
+
+        protected NbtHolder LoadNbt(string path)
+        {
+            return new NbtHolder(path);
+        }
+
+        protected LibNbt.Tags.NbtList GetPos(NbtHolder player)
+        {
+            var pos = player.File.RootTag.Tags.First(t => t.Name == "Pos") as LibNbt.Tags.NbtList;
+            return pos;
+        }
+    }
+    
+    struct Coordinates 
+    {
+        const char delimiter = ':';
+        public double x;
+        public double y;
+        public double z;
+
+        public Coordinates(string str) 
+        {
+            var list = str.Split(delimiter);
+            x = double.Parse(list[0]);
+            y = double.Parse(list[1]);
+            z = double.Parse(list[2]);
+        }
+
+        public Coordinates(LibNbt.Tags.NbtList pos)
+        {
+            x = (pos[0] as LibNbt.Tags.NbtDouble).Value;
+            y = (pos[1] as LibNbt.Tags.NbtDouble).Value;
+            z = (pos[2] as LibNbt.Tags.NbtDouble).Value;
+        }
+
+        public void ApplyCoordinatesToPos(LibNbt.Tags.NbtList pos)
+        {
+            (pos[0] as LibNbt.Tags.NbtDouble).Value = this.x;
+            (pos[1] as LibNbt.Tags.NbtDouble).Value = this.y;
+            (pos[2] as LibNbt.Tags.NbtDouble).Value = this.z;
+        }
+
+        public override string ToString()
+        {
+            return "" + x + delimiter + y + delimiter + z;
+        }
+    }
+
+    class CoordinateGetter : Operation
+    {
+        public CoordinateGetter(VariableBin var) : base(var) { }
+
+        public void GetCoords(string player, string world)
+        {
+            using (var playerTag = LoadPlayer(world, player))
+            {
+                var pos = GetPos(playerTag);
+                var coords = new Coordinates(pos);
+                Console.WriteLine(coords.ToString());
+            }
+        }
+    }
+
+    class Teleporter : Operation
+    {
+        public Teleporter(VariableBin var) : base(var) { }
+
+        public void Teleport(string player, string world, string coordinates)
+        {
+            var coords = new Coordinates(coordinates);
+            using (var playerTag = LoadPlayer(world, player))
+            {
+                var pos = GetPos(playerTag);
+                coords.ApplyCoordinatesToPos(pos);
+            }
+        }
+    }
+
+    class WorldSwitcher : Operation
+    {
+        public WorldSwitcher(VariableBin var) : base(var) { }
+
+        public void Switch(string world1, string world2, string player)
+        {
             var player1 = LoadPlayer(world1, player);
             var player2 = LoadPlayer(world2, player);
 
@@ -94,28 +249,6 @@ namespace WorldSwitch
 
             player1.RootTag.Tags.Add(inventory2);
             player2.RootTag.Tags.Add(inventory1);
-        }
-
-        string PlayerDirectory(string worldname)
-        {
-            return Path.Combine(var.Str[worldname],"players");
-        }
-
-        NbtHolder LoadPlayer(string world, string player)
-        {
-            var playerDir = PlayerDirectory(world);
-            if (!Directory.Exists(playerDir))
-                ErrorMessage = string.Format("player folder not found for world: {0}", world);
-            string playerFile = Path.Combine(playerDir, player + ".dat");
-            if (!File.Exists(playerFile))
-                ErrorMessage = string.Format("player file not found for world: {0} and player: {1}", world, player);
-
-            return LoadNbt(playerFile);
-        }
-
-        NbtHolder LoadNbt(string path)
-        {
-            return new NbtHolder(path);
         }
     }
 }

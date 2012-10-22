@@ -12,5 +12,6 @@ public:
 	std::string handle_message(std::string message);
 
 private:
-	void invoke_world_switch(std::string inifile, std::string world1, std::string world2, std::string player);
+	void invoke_world_switch(std::string player, std::string world1, std::string world2);
+	void invoke_teleport(std::string world, std::string player, std::string teleport1, std::string teleport2);
 };
