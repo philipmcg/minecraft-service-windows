@@ -1,0 +1,7 @@
+$mystr1=myval1
+ // this is a comment;
+// this is another comment
+$mystr2= myval2
+   #myint1=1
+#myint2=2
+#myint42=42

@@ -1,0 +1,12 @@
+Debug/
+Release/
+ipch/
+.hg/
+*.cd
+*.user
+*.exe
+*.log
+*.ini
+*.sdf
+*.suo
+*ncrunchsolution*

@@ -1,0 +1,11 @@
+This is a service that runs on a windows minecraft server machine.  It listens to TCP port 25500 (or whatever is specified).
+
+Clients can send world switch commands to swap their inventory between two worlds on the server.
+
+All of my code here is under the MIT License.  
+
+Some code (chat_server.h and chat_server.cpp) is copied from boost.org and is under the Boost license.
+
+
+Philip McGarvey
+www.philipmcg.com
