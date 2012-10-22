@@ -14,10 +14,14 @@
     <ProjectGuid>{47AC275A-742F-49F1-AE40-D750B3F67F46}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>MinecraftClient</RootNamespace>
-    <SccProjectName>&lt;Project Location In Database&gt;</SccProjectName>
-    <SccAuxPath>&lt;Source Control Database&gt;</SccAuxPath>
-    <SccLocalPath>&lt;Local Binding Root of Project&gt;</SccLocalPath>
-    <SccProvider>Mercurial Source Control Package</SccProvider>
+    <SccProjectName>
+    </SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

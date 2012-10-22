@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 #include <boost/function.hpp>
-#include "../../MinecraftShared/minecraft_shared.hpp"
+#include "../../shared/minecraft_shared.hpp"
 
 
 class UserAction {

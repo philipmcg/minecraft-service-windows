@@ -16,7 +16,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/function.hpp>
-#include "../../MinecraftShared/chat_message.hpp"
+#include "../../shared/chat_message.hpp"
 #include "message_handler.h"
 
 using boost::asio::ip::tcp;

@@ -10,7 +10,7 @@
 #include <sstream>
 #include "stdarg.h"
 
-#include "../../MinecraftShared/minecraft_shared.hpp"
+#include "../../shared/minecraft_shared.hpp"
 #include "io_helpers.h"
 
 const std::string kIniFile = "worldswitch.ini";

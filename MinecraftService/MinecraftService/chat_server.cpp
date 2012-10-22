@@ -20,7 +20,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
-#include "../../MinecraftShared/chat_message.hpp"
+#include "../../shared/chat_message.hpp"
 
 #include "chat_server.h"
 

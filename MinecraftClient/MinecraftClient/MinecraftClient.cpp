@@ -4,7 +4,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/function.hpp>
-#include "../../MinecraftShared/minecraft_shared.hpp"
+#include "../../shared/minecraft_shared.hpp"
 #include "message_handler.h"
 #include "chat_client.h"
 
