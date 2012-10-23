@@ -93,16 +93,27 @@ public:
 		std::cout << "server says " << this->message()[0] << std::endl;
 
 		AddAction("Teleport", "get_teleports", "");
+		return PromptUser();
+	}
+};
+
+class MainPrompt : public UserActionInterface {
+public:	UserAction HandleUserInput() {
+		std::cout << user() << ", please enter a command." << std::endl;
+
+		AddAction("Teleport Menu", commands::get_teleports, "");
+		AddAction("Say", commands::say, "");
 
 		return PromptUser();
 	}
 };
 
-class Prompt : public UserActionInterface {
-public:
-	UserAction HandleUserInput() {
+class TeleportsPrompt : public UserActionInterface {
+public:	UserAction HandleUserInput() {
+			auto tps = this->message().operator[](0);
 		std::cout << user() << ", please enter a command." << std::endl;
 
+		AddAction("Teleport Menu", commands::get_teleports, "");
 		AddAction("Say", commands::say, "");
 
 		return PromptUser();
@@ -135,9 +146,11 @@ public:
 	std::string MapCommandToAction(const MinecraftMessage& msg) {
 		std::string cmd = msg.command();
 		if(commands::acknowledge == cmd)
-			return HandleUserAction<Prompt>(msg);
+			return HandleUserAction<MainPrompt>(msg);
 		else if(commands::say == cmd)
 			return HandleUserAction<SayPrompt>(msg);
+		else if(commands::get_teleports_response == cmd)
+			return HandleUserAction<TeleportsPrompt>(msg);
 		
 		return commands::quit;
 	}

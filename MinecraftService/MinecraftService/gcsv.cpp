@@ -185,6 +185,9 @@ std::string GcsvLine::operator[](const std::string& key) {
 	assert(index >= 0 && index < header_->size());
 	return values_.get()[index];
 }
+std::string GcsvLine::get(const std::string& key) {
+	return this->operator[](key);
+}
 
 
 
@@ -208,6 +211,9 @@ bool GcsvTable::ContainsKey(const std::string& key) {
 }
 
 GcsvLinePtr GcsvTable::operator[](const std::string& key) {
+	return lines_map_.find(key)->second;
+}
+GcsvLinePtr GcsvTable::get(const std::string& key) {
 	return lines_map_.find(key)->second;
 }
 
@@ -235,6 +241,9 @@ GcsvTableCollection::~GcsvTableCollection() {
 	//std::cout << " deleting GcsvTableCollection " << std::endl;
 }
 
+std::shared_ptr<GcsvTable> GcsvTableCollection::get(const std::string& key) {
+	return tables_.find(key)->second;
+}
 std::shared_ptr<GcsvTable> GcsvTableCollection::operator[](const std::string& key) {
 	return tables_.find(key)->second;
 }

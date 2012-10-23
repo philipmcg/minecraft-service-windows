@@ -11,13 +11,21 @@ namespace commands {
 
 // I can remove this macro use when I'm done defining new commands.
 #define COMMAND( x, n ) \
-	const std::string x = #x; \
-	const int num_##x = n
-	COMMAND(quit, 0);
-	COMMAND(worldswitch, 2);
-	COMMAND(login, 0);
-	COMMAND(acknowledge, 0);
-	COMMAND(say, 1);
+	const std::string x = #x
+
+	COMMAND(quit);
+	COMMAND(login);
+	COMMAND(acknowledge);
+	COMMAND(say);
+	COMMAND(teleport);
+	COMMAND(teleport_response);
+
+	COMMAND(worldswitch);
+	COMMAND(worldswitch_response);
+	COMMAND(get_teleports);
+	COMMAND(get_teleports_response);
+
+	COMMAND(get_coords);
 #undef COMMAND
 
     std::string make(std::string command, std::string param1) {

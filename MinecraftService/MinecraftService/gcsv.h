@@ -53,6 +53,7 @@ public:
 	GcsvLine(std::shared_ptr<GcsvHeader> header, const vector_str& fields); 
 	~GcsvLine();
 	std::string operator[](const std::string& key);
+	std::string get(const std::string& key);
 
 private:
 	std::shared_ptr<std::string> values_;
@@ -78,6 +79,7 @@ public:
 	void Add(GcsvLinePtr line);
 	bool ContainsKey(const std::string& key);
 	GcsvLinePtr operator[](const std::string& key);
+	GcsvLinePtr get(const std::string& key);
 	std::string name();
 	std::vector<GcsvLinePtr>::iterator begin();
 	std::vector<GcsvLinePtr>::iterator end();
@@ -101,6 +103,7 @@ public:
 	GcsvTableCollection(); 
 	~GcsvTableCollection();
 	std::shared_ptr<GcsvTable> operator[](const std::string& key);
+	std::shared_ptr<GcsvTable> get(const std::string& key);
 	void AddTable(std::shared_ptr<GcsvTable> table);
 private:
 	std::map<std::string, std::shared_ptr<GcsvTable>> tables_;
