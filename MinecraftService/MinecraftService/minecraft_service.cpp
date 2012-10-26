@@ -18,10 +18,13 @@
 
 typedef std::string str;
 
+// the below three files will be in the same directory as this executable
 const std::string kExecutable = "WorldSwitch.exe";
 const std::string kIniFile = "worldswitch.ini";
-const std::string kWorldsFile = "worlds.csv";
+const std::string kWorldsFile = "worlds.csv"; 
 
+// this will be in the world directory for each world
+const std::string kTeleportsFile = "teleports.csv"; 
 
 std::deque<std::string> list( int Count, ... )
 {
@@ -70,6 +73,7 @@ std::string InvokeCommand(std::string command, std::deque<std::string> params) {
 	return system_with_output(cmd);
 }
 
+// represents a point in three-dimensional space of the minecraft world
 struct Coordinates {
 	static const char delimiter = minecraft::kDelimiter2;
 	double x;
@@ -111,8 +115,6 @@ Coordinates InvokeGetCoordinates(std::string player, std::string world) {
 }
 
 const double kCloseEnoughToTeleportFrom = 20;
-
-
 
 std::string PackTeleportString(std::string world, std::string loc1, std::string loc2) {
 	std::stringstream stream;
