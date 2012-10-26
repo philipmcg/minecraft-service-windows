@@ -144,3 +144,69 @@ private:
 	std::string user_;
 };
 
+// represents a point in three-dimensional space of the minecraft world
+struct Coordinates {
+	static const char delimiter = minecraft::kDelimiter2;
+	double x;
+	double y;
+	double z;
+
+	Coordinates() {
+		x = 0;
+		y = 0;
+		z = 0;
+	}
+	Coordinates(std::string x_, std::string y_, std::string z_) {
+		x = atof(x_.c_str());
+		y = atof(y_.c_str());
+		z = atof(z_.c_str());
+	}
+	Coordinates(std::string str) {
+		auto list = util::tokenize(str, delimiter);
+		x = atof(list[0].c_str());
+		y = atof(list[1].c_str());
+		z = atof(list[2].c_str());
+	}
+
+	std::string ToString() {
+		std::stringstream stream;
+		stream << x << delimiter << y << delimiter << z;
+		return stream.str();
+	}
+
+	bool Within(Coordinates other, double distance) {
+		return (abs(other.x - x) < distance)
+			&& (abs(other.y - y) < distance)
+			&& (abs(other.z - z) < distance);
+	}
+};
+
+struct Teleport {
+	static const char delimiter = minecraft::kDelimiter3;
+	std::string World;
+	std::string Location1;
+	std::string Location2;
+	Coordinates Coords1;
+	Coordinates Coords2;
+
+	Teleport(std::string world, std::string location1, std::string location2, Coordinates coords1, Coordinates coords2) 
+		: World(world), Location1(location1), Location2(location2), Coords1(coords1), Coords2(coords2) { 
+	}
+
+	Teleport(std::string packed) : Coords1(), Coords2() {
+		auto unpacked = util::tokenize(packed, delimiter);
+		World = unpacked[0];
+		Location1 = unpacked[1];
+		Location2 = unpacked[2];
+	}
+
+	std::string ToString() {
+		std::stringstream stream;
+		stream << World << delimiter << Location1 << delimiter << Location2;
+		return stream.str();
+	}
+
+	bool Equals(const Teleport& other) {
+		return other.World == World && other.Location1 == Location1 && other.Location2 == Location2;
+	}
+};

@@ -114,11 +114,11 @@ public:	UserAction HandleUserInput() {
 		auto teleports_string = this->message().operator[](0);
 		auto teleports = util::tokenize(teleports_string, minecraft::kDelimiter3);
 
-		foreach(teleport, teleports) {
-			auto teleport_split = util::tokenize(*teleport, minecraft::kDelimiter2);
+		foreach(teleport_string, teleports) {
+			Teleport teleport(*teleport_string);
 			std::stringstream text;
-			text << teleport_split[0] << ": " << teleport_split[1] << " to " << teleport_split[2];
-			AddAction(text.str(), commands::teleport, *teleport);
+			text << teleport.World << ": " << teleport.Location1 << " to " << teleport.Location2;
+			AddAction(text.str(), commands::teleport, teleport.ToString());
 		}
 
 		std::cout << user() << ", choose the teleport you wish to use." << std::endl;

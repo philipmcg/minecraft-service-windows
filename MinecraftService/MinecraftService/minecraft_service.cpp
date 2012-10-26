@@ -73,42 +73,10 @@ std::string InvokeCommand(std::string command, std::deque<std::string> params) {
 	return system_with_output(cmd);
 }
 
-// represents a point in three-dimensional space of the minecraft world
-struct Coordinates {
-	static const char delimiter = minecraft::kDelimiter2;
-	double x;
-	double y;
-	double z;
-
-	Coordinates(std::string x_, std::string y_, std::string z_) {
-		x = atof(x_.c_str());
-		y = atof(y_.c_str());
-		z = atof(z_.c_str());
-	}
-	Coordinates(std::string str) {
-		auto list = io_helpers::tokenize(str, delimiter);
-		x = atof(list[0].c_str());
-		y = atof(list[1].c_str());
-		z = atof(list[2].c_str());
-	}
-
-	std::string ToString() {
-		std::stringstream stream;
-		stream << x << delimiter << y << delimiter << z;
-		return stream.str();
-	}
-
-	bool Within(Coordinates other, double distance) {
-		return (abs(other.x - x) < distance)
-			&& (abs(other.y - y) < distance)
-			&& (abs(other.z - z) < distance);
-	}
-};
 
 void InvokeWorldSwitch(std::string player, std::string world1, std::string world2) {
 	auto output = InvokeCommand(commands::worldswitch, list(3, player, world1, world2));
 }
-
 Coordinates InvokeGetCoordinates(std::string player, std::string world) {
 	auto coords = InvokeCommand(commands::get_coords, list(2, player, world));
 	return Coordinates(coords);
@@ -131,15 +99,13 @@ std::string PackTeleportString(std::string world, std::string loc1, std::string 
 //     get all teleports
 //	   filter for valid teleports
 //     add to list
-//   pack and return list of valid teleports
-//   teleports formatted as  world:loc1:loc2
-//   packed in pipe-delimited string
-std::string InvokeGetTeleports(std::string player) {
+std::vector<Teleport> InvokeGetTeleports(std::string player) {
 
 	auto worlds = gcsv::read(kWorldsFile)->operator[]("worlds");
 	auto it = worlds->begin();
 	
 	std::stringstream packed_teleports;
+	std::vector<Teleport> teleports;
 
 	BOOST_FOREACH(auto world, std::make_pair(worlds->begin(), worlds->end())){
 		auto world_name = (*world)["name"];
@@ -147,37 +113,58 @@ std::string InvokeGetTeleports(std::string player) {
 		auto coords = InvokeGetCoordinates(player, world_name);
 		auto teleports_path = path/"teleports.csv";
 
-		vector_str valid_teleports;
-
 		if(boost::filesystem::exists(teleports_path)) {
 			auto teleports_csv = gcsv::read(teleports_path.string());
 			auto locations = teleports_csv->get("locations");
 			auto world_teleports = teleports_csv->get("teleports");
 			for(auto tp = world_teleports->begin(); tp != world_teleports->end(); ++tp) {
 				auto loc1 = locations->get(tp->get()->get("a"));
+				auto loc2 = locations->get(tp->get()->get("b"));
 				auto loc1_name = locations->get(tp->get()->get("a"))->get("name");
 				auto loc2_name = locations->get(tp->get()->get("b"))->get("name");
 				auto coords1 = Coordinates(loc1->get("x"),loc1->get("y"),loc1->get("z"));
+				auto coords2 = Coordinates(loc2->get("x"),loc2->get("y"),loc2->get("z"));
 				if(coords1.Within(coords, kCloseEnoughToTeleportFrom)) {
-					valid_teleports.push_back(PackTeleportString(world_name, loc1_name, loc2_name));
+					teleports.push_back(Teleport(world_name, loc1_name, loc2_name, coords1, coords2));
 				}
 			}
-		} // after this, the valid_teleports list is populated.
+		} // after this, the teleports vector is populated.
+	}
+	return teleports;
+}
 
-		// pack the teleports into a pipe-delimited string to send to client
-		foreach(teleport, valid_teleports) {
-			packed_teleports << *teleport << minecraft::kDelimiter3;
+bool InvokeTeleport(std::string player, Teleport teleport) {
+
+	auto teleports = InvokeGetTeleports(player);
+	foreach(possible_teleport, teleports) {
+		if(possible_teleport->Equals(teleport)) {
+			auto output = InvokeCommand(commands::teleport, list(4, player, possible_teleport->World, possible_teleport->Coords1, possible_teleport->Coords2));
+			return true;
 		}
 	}
+	return false;
+}
+
+//   pack and return list of valid teleports
+//   teleports formatted as  world:loc1:loc2
+//   packed in pipe-delimited string
+std::string GetPackedTeleportsList(std::string player) {
+	auto teleports = InvokeGetTeleports(player);
+	std::stringstream packed_teleports;
+	foreach(teleport, teleports) {
+		packed_teleports << teleport->ToString() << minecraft::kDelimiter3;
+	}
+	// pack the teleports into a pipe-delimited string to send to client
 	auto packed_string = packed_teleports.str();
 	return packed_string.substr(0, packed_string.length() - 1); // remove the last dangling pipe
+	return packed_string;
 }
 
 // if the message is in the right format, 
 // this function invokes the WorldSwitch.exe with arguments from the message
 std::string minecraft_service::handle_message(std::string message) {
 	
-	auto params = io_helpers::tokenize(message, ','); 
+	auto params = io_helpers::tokenize(message, minecraft::kDelimiter1); 
 
 	if(params.size() == 0)
 		return "";
@@ -192,10 +179,18 @@ std::string minecraft_service::handle_message(std::string message) {
 		auto world1 = params[0];
 		auto world2 = params[1];
 		InvokeWorldSwitch(player, world1, world2);
-		return ResponseCommand(commands::say, player, list(1, str("Transferred inventory between worlds")));
+		return ResponseCommand(commands::worldswitch_response, player, list(1, str("Transferred inventory between worlds")));
+	}
+	else if(command == commands::teleport && numparams == 1) {
+		Teleport teleport(params[0]);
+		bool success = InvokeTeleport(player, teleport);
+		if(success)
+			return ResponseCommand(commands::teleport_response, player, list(1, str("Teleported successfully")));
+		else
+			return ResponseCommand(commands::teleport_response, player, list(1, str("Teleport failed")));
 	}
 	else if(command == commands::get_teleports && numparams == 0) {
-		auto teleports = InvokeGetTeleports(player);
+		auto teleports = GetPackedTeleportsList(player);
 		return ResponseCommand(commands::get_teleports_response, player, list(1, teleports));
 	}
 	else if(command == commands::login && numparams == 0) {
