@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 	argv[3] = "login,PhilipM";
 	argc = 4;
 #endif
+
 	try
 	{
 		if (argc != 4)
@@ -61,7 +62,6 @@ int main(int argc, char* argv[])
 		}
 		std::cout << "quiting..." << std::endl;
 		Sleep(200);
-
 
 		c.close();
 		t.join();

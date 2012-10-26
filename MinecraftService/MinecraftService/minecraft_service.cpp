@@ -15,8 +15,10 @@
 
 #include "../../shared/minecraft_shared.hpp"
 #include "io_helpers.h"
+#include "gcsv_worlds.h"
 
 typedef std::string str;
+typedef std::vector<std::pair<std::string,std::string>> vector_pair;
 
 // the below three files will be in the same directory as this executable
 const std::string kExecutable = "WorldSwitch.exe";
@@ -73,6 +75,45 @@ std::string InvokeCommand(std::string command, std::deque<std::string> params) {
 	return system_with_output(cmd);
 }
 
+std::string GetPlayerFile(std::string world_path, std::string player) {
+	auto path = boost::filesystem::path(world_path);
+	path /= "players";
+	path /= (player + ".dat");
+	return path.string();
+}
+
+// returns all valid pairs of worlds for the player to switch between
+vector_pair GetWorldsToSwitch(std::string player) {
+	auto worlds = WorldData::LoadWorldsFromFile(kWorldsFile);
+	vector_pair pairs;
+	std::vector<str> valid_worlds;
+	
+	BOOST_FOREACH(auto world, worlds)  {
+		if(boost::filesystem::exists(GetPlayerFile(world->path(), player)))
+			valid_worlds.push_back(world->name());
+	}
+	for(auto it = valid_worlds.begin(); it != valid_worlds.end(); ++it) {
+		for(auto k = it; k != valid_worlds.end(); ++k) {
+			if(*it != *k) {
+				pairs.push_back(std::make_pair(*it, *k));
+			}
+		}
+	}
+	return pairs;
+}
+
+
+std::string GetPackedWorldsToSwitch(std::string player) {
+	auto pairs = GetWorldsToSwitch(player);
+	std::stringstream stream;
+	BOOST_FOREACH(auto pair, pairs) {
+		stream << pair.first << minecraft::kDelimiter2 << pair.second;
+		stream << minecraft::kDelimiter3;
+	}
+	auto packed_string = stream.str();
+	return packed_string.substr(0, packed_string.length() - 1); // remove the last dangling delimiter
+	return packed_string;
+}
 
 void InvokeWorldSwitch(std::string player, std::string world1, std::string world2) {
 	auto output = InvokeCommand(commands::worldswitch, list(3, player, world1, world2));
@@ -90,6 +131,7 @@ std::string PackTeleportString(std::string world, std::string loc1, std::string 
 	return stream.str();
 }
 
+
 // What needs to happen for the player to teleport:
 // client -> get_teleports -> server
 // server:
@@ -101,15 +143,14 @@ std::string PackTeleportString(std::string world, std::string loc1, std::string 
 //     add to list
 std::vector<Teleport> InvokeGetTeleports(std::string player) {
 
-	auto worlds = gcsv::read(kWorldsFile)->operator[]("worlds");
-	auto it = worlds->begin();
-	
+	auto worlds = WorldData::LoadWorldsFromFile(kWorldsFile);
+
 	std::stringstream packed_teleports;
 	std::vector<Teleport> teleports;
 
-	BOOST_FOREACH(auto world, std::make_pair(worlds->begin(), worlds->end())){
-		auto world_name = (*world)["name"];
-		auto path = boost::filesystem::path((*world)["path"]);
+	BOOST_FOREACH(auto world, worlds) { 
+		auto world_name = world->name();
+		auto path = boost::filesystem::path(world->path());
 		auto coords = InvokeGetCoordinates(player, world_name);
 		auto teleports_path = path/"teleports.csv";
 
@@ -156,7 +197,7 @@ std::string GetPackedTeleportsList(std::string player) {
 	}
 	// pack the teleports into a pipe-delimited string to send to client
 	auto packed_string = packed_teleports.str();
-	return packed_string.substr(0, packed_string.length() - 1); // remove the last dangling pipe
+	return packed_string.substr(0, packed_string.length() - 1); // remove the last dangling delimiter
 	return packed_string;
 }
 
@@ -192,6 +233,10 @@ std::string minecraft_service::handle_message(std::string message) {
 	else if(command == commands::get_teleports && numparams == 0) {
 		auto teleports = GetPackedTeleportsList(player);
 		return ResponseCommand(commands::get_teleports_response, player, list(1, teleports));
+	}
+	else if(command == commands::get_worldswitches && numparams == 0) {
+		auto worldswitches = GetPackedWorldsToSwitch(player);
+		return ResponseCommand(commands::get_worldswitches_response, player, list(1, worldswitches));
 	}
 	else if(command == commands::login && numparams == 0) {
 		return ResponseCommand(commands::menu_response, player, list(0));

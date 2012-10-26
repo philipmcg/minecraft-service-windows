@@ -43,7 +43,7 @@ std::string HandleUserAction(const MinecraftMessage& message) {
 
 class UserActionInterface {
 public:
-	UserActionInterface() : message_("void,void"), actions_() {
+	UserActionInterface() : message_("void,void"), actions_(), is_main_menu_(false) {
 	}
 	virtual UserAction HandleUserInput() = 0;
 	void SetMessage(const MinecraftMessage& message) {
@@ -67,7 +67,8 @@ protected:
 
 	// Adds the quit option the list of actions, prints all actions, takes input, and returns the command whose shortcut matches the input.
 	UserAction PromptUser() {
-		AddAction("Back to main menu", commands::menu, "");
+		if(!is_main_menu_)
+			AddAction("Back to main menu", commands::menu, "");
 		AddAction("Quit", "quit", "");
 		foreach(it, actions_) {
 			(*it).OutputOption();
@@ -88,6 +89,7 @@ protected:
 	// message is the message that arrived FROM the server that spawned this interaction
 	MinecraftMessage message_;
 	std::vector<UserAction> actions_;
+	bool is_main_menu_;
 };
 
 class SayPrompt : public UserActionInterface {
@@ -102,15 +104,17 @@ public:
 
 class MainPrompt : public UserActionInterface {
 public:	UserAction HandleUserInput() {
+		is_main_menu_ = true;
 
 		if(this->message().num_params() > 0) {
 			std::string server_message = this->message()[0];
 			if(!server_message.empty())
 				std::cout << std::endl << server_message << std::endl;
 		}
-		std::cout << std::endl << user() << ", please enter a command." << std::endl;
+		std::cout << std::endl << user() << ", please enter a command (i.e., type '1' and press enter)." << std::endl;
 
 		AddAction("Teleport Menu", commands::get_teleports, "");
+		AddAction("World Switch Menu", commands::get_worldswitches, "");
 //		AddAction("Say", commands::say, "");
 
 		return PromptUser();

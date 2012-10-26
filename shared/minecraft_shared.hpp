@@ -56,6 +56,8 @@ namespace commands {
 	COMMAND(worldswitch_response);
 	COMMAND(get_teleports);
 	COMMAND(get_teleports_response);
+	COMMAND(get_worldswitches);
+	COMMAND(get_worldswitches_response);
 
 	COMMAND(get_coords);
 #undef COMMAND
@@ -212,5 +214,26 @@ struct Teleport {
 
 	bool Equals(const Teleport& other) {
 		return other.World == World && other.Location1 == Location1 && other.Location2 == Location2;
+	}
+};
+struct WorldSwitch {
+	static const char delimiter = minecraft::kDelimiter2;
+	std::string World1;
+	std::string World2;
+
+	WorldSwitch(std::string world1, std::string world2) 
+		: World1(world1), World2(world2) { 
+	}
+
+	WorldSwitch(std::string packed) {
+		auto unpacked = util::tokenize(packed, delimiter);
+		World1 = unpacked[0];
+		World2 = unpacked[1];
+	}
+
+	std::string ToString() {
+		std::stringstream stream;
+		stream << World1 << delimiter << World2;
+		return stream.str();
 	}
 };

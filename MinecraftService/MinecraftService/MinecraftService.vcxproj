@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClInclude Include="chat_server.h" />
     <ClInclude Include="gcsv.h" />
+    <ClInclude Include="gcsv_worlds.h" />
     <ClInclude Include="io_helpers.h" />
     <ClInclude Include="minecraft_service.h" />
     <ClInclude Include="stdafx.h" />
