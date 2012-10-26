@@ -138,7 +138,7 @@ bool InvokeTeleport(std::string player, Teleport teleport) {
 	auto teleports = InvokeGetTeleports(player);
 	foreach(possible_teleport, teleports) {
 		if(possible_teleport->Equals(teleport)) {
-			auto output = InvokeCommand(commands::teleport, list(4, player, possible_teleport->World, possible_teleport->Coords1, possible_teleport->Coords2));
+			auto output = InvokeCommand(commands::teleport, list(3, player, possible_teleport->World, possible_teleport->Coords2.ToString()));
 			return true;
 		}
 	}

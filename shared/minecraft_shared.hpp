@@ -182,7 +182,7 @@ struct Coordinates {
 };
 
 struct Teleport {
-	static const char delimiter = minecraft::kDelimiter3;
+	static const char delimiter = minecraft::kDelimiter2;
 	std::string World;
 	std::string Location1;
 	std::string Location2;
