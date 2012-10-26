@@ -115,8 +115,8 @@ std::string GetPackedWorldsToSwitch(std::string player) {
 	return packed_string;
 }
 
-void InvokeWorldSwitch(std::string player, std::string world1, std::string world2) {
-	auto output = InvokeCommand(commands::worldswitch, list(3, player, world1, world2));
+void InvokeWorldSwitch(std::string player, WorldSwitch worldswitch) {
+	auto output = InvokeCommand(commands::worldswitch, list(3, player, worldswitch.World1, worldswitch.World2));
 }
 Coordinates InvokeGetCoordinates(std::string player, std::string world) {
 	auto coords = InvokeCommand(commands::get_coords, list(2, player, world));
@@ -216,10 +216,9 @@ std::string minecraft_service::handle_message(std::string message) {
 	params.erase(params.begin());
 	int numparams = params.size();
 	
-	if(command == commands::worldswitch && numparams == 2) {
-		auto world1 = params[0];
-		auto world2 = params[1];
-		InvokeWorldSwitch(player, world1, world2);
+	if(command == commands::worldswitch && numparams == 1) {
+		auto pair = params[0];
+		InvokeWorldSwitch(player, WorldSwitch(pair));
 		return ResponseCommand(commands::worldswitch_response, player, list(1, str("Transferred inventory between worlds")));
 	}
 	else if(command == commands::teleport && numparams == 1) {

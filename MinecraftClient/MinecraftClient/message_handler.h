@@ -138,6 +138,23 @@ public:	UserAction HandleUserInput() {
 		return PromptUser();
 	}
 };
+class WorldSwitchPrompt : public UserActionInterface {
+public:	UserAction HandleUserInput() {
+		auto worldswitches_string = this->message().operator[](0);
+		auto worldswitches = util::tokenize(worldswitches_string, minecraft::kDelimiter3);
+
+		foreach(worldswitch_string, worldswitches) {
+			WorldSwitch worldswitch(*worldswitch_string);
+			std::stringstream text;
+			text << "Swap between " << worldswitch.World1 << " and " << worldswitch.World2;
+			AddAction(text.str(), commands::worldswitch, worldswitch.ToString());
+		}
+
+		std::cout << std::endl << user() << ", choose the pair of worlds to swap inventory between." << std::endl;
+
+		return PromptUser();
+	}
+};
 
 class MessageHandler {
 public:
@@ -171,6 +188,10 @@ public:
 		else if(commands::get_teleports_response == cmd)
 			return HandleUserAction<TeleportsPrompt>(msg);
 		else if(commands::teleport_response == cmd)
+			return HandleUserAction<MainPrompt>(msg);
+		else if(commands::get_worldswitches_response == cmd)
+			return HandleUserAction<WorldSwitchPrompt>(msg);
+		else if(commands::worldswitch_response == cmd)
 			return HandleUserAction<MainPrompt>(msg);
 		
 		return commands::quit;
