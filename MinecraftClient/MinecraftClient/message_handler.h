@@ -111,8 +111,17 @@ public:	UserAction HandleUserInput() {
 
 class TeleportsPrompt : public UserActionInterface {
 public:	UserAction HandleUserInput() {
-		auto tps = this->message().operator[](0);
-		std::cout << user() << ", please enter a command." << std::endl;
+		auto teleports_string = this->message().operator[](0);
+		auto teleports = util::tokenize(teleports_string, minecraft::kDelimiter3);
+
+		foreach(teleport, teleports) {
+			auto teleport_split = util::tokenize(*teleport, minecraft::kDelimiter2);
+			std::stringstream text;
+			text << teleport_split[0] << ": " << teleport_split[1] << " to " << teleport_split[2];
+			AddAction(text.str(), commands::teleport, *teleport);
+		}
+
+		std::cout << user() << ", choose the teleport you wish to use." << std::endl;
 
 		AddAction("Teleport Menu", commands::get_teleports, "");
 		AddAction("Say", commands::say, "");

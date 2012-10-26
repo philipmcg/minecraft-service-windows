@@ -71,7 +71,7 @@ std::string InvokeCommand(std::string command, std::deque<std::string> params) {
 }
 
 struct Coordinates {
-	static const char delimiter = ':';
+	static const char delimiter = minecraft::kDelimiter2;
 	double x;
 	double y;
 	double z;
@@ -164,7 +164,7 @@ std::string InvokeGetTeleports(std::string player) {
 
 		// pack the teleports into a pipe-delimited string to send to client
 		foreach(teleport, valid_teleports) {
-			packed_teleports << *teleport << "|";
+			packed_teleports << *teleport << minecraft::kDelimiter3;
 		}
 	}
 	auto packed_string = packed_teleports.str();
