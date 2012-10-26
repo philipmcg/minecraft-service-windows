@@ -197,7 +197,10 @@ std::string minecraft_service::handle_message(std::string message) {
 		return ResponseCommand(commands::get_teleports_response, player, list(1, teleports));
 	}
 	else if(command == commands::login && numparams == 0) {
-		return ResponseCommand(commands::acknowledge, player, list(0));
+		return ResponseCommand(commands::menu_response, player, list(0));
+	}
+	else if(command == commands::menu && numparams == 0) {
+		return ResponseCommand(commands::menu_response, player, list(0));
 	}
 	else {
 		std::cout << message << std::endl;

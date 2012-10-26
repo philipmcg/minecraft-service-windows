@@ -15,7 +15,8 @@ namespace commands {
 
 	COMMAND(quit);
 	COMMAND(login);
-	COMMAND(acknowledge);
+	COMMAND(menu); // back to main menu
+	COMMAND(menu_response);
 	COMMAND(say);
 	COMMAND(teleport);
 	COMMAND(teleport_response);

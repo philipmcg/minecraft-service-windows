@@ -66,6 +66,7 @@ protected:
 
 	// Adds the quit option the list of actions, prints all actions, takes input, and returns the command whose shortcut matches the input.
 	UserAction PromptUser() {
+		AddAction("Back to main menu", commands::menu, "");
 		AddAction("Quit", "quit", "");
 		foreach(it, actions_) {
 			(*it).OutputOption();
@@ -110,7 +111,7 @@ public:	UserAction HandleUserInput() {
 
 class TeleportsPrompt : public UserActionInterface {
 public:	UserAction HandleUserInput() {
-			auto tps = this->message().operator[](0);
+		auto tps = this->message().operator[](0);
 		std::cout << user() << ", please enter a command." << std::endl;
 
 		AddAction("Teleport Menu", commands::get_teleports, "");
@@ -145,7 +146,7 @@ public:
 	// This takes the response message from the server and chooses what to display for the user here.
 	std::string MapCommandToAction(const MinecraftMessage& msg) {
 		std::string cmd = msg.command();
-		if(commands::acknowledge == cmd)
+		if(commands::menu_response == cmd)
 			return HandleUserAction<MainPrompt>(msg);
 		else if(commands::say == cmd)
 			return HandleUserAction<SayPrompt>(msg);

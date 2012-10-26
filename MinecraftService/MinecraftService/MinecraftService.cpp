@@ -41,7 +41,8 @@ int main(int argc, char* argv[])
 
 	if(argc < 2) {
 		// These arguments will create one server at the given port
-		argv = (char**)malloc(sizeof(char*) * 2);
+		char* argv2[2];
+		argv = argv2;
 		argv[0] = "";
 		argv[1] = "25500";
 		argc = 2;
