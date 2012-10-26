@@ -34,10 +34,13 @@ void run_tests() {
 
 
 
+#define DEBUG_
 int main(int argc, char* argv[])
 {
 	// uncomment this to run unit tests
+#ifdef DEBUG
 	 run_tests();
+#endif
 
 	if(argc < 2) {
 		// These arguments will create one server at the given port

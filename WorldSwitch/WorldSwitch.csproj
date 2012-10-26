@@ -63,7 +63,12 @@
     <Compile Include="LibNbt\Tags\NbtTagType.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VariableBin.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\C# .NET\Utilities\Utilities_New\Utilities\Utilities.csproj">
+      <Project>{5C5C7559-89D5-4A90-878E-F4E3EEA7B69A}</Project>
+      <Name>Utilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

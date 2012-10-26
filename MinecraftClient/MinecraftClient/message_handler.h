@@ -123,17 +123,20 @@ public:	UserAction HandleUserInput() {
 
 class TeleportsPrompt : public UserActionInterface {
 public:	UserAction HandleUserInput() {
-		auto teleports_string = this->message().operator[](0);
-		auto teleports = util::tokenize(teleports_string, minecraft::kDelimiter3);
 
-		foreach(teleport_string, teleports) {
-			Teleport teleport(*teleport_string);
-			std::stringstream text;
-			text << teleport.World << ": " << teleport.Location1 << " to " << teleport.Location2;
-			AddAction(text.str(), commands::teleport, teleport.ToString());
+		if(this->message().num_params() > 0) {
+			auto teleports_string = this->message().operator[](0);
+			auto teleports = util::tokenize(teleports_string, minecraft::kDelimiter3);
+
+			foreach(teleport_string, teleports) {
+				Teleport teleport(*teleport_string);
+				std::stringstream text;
+				text << teleport.World << ": " << teleport.Location1 << " to " << teleport.Location2;
+				AddAction(text.str(), commands::teleport, teleport.ToString());
+			}
+			std::cout << std::endl << user() << ", choose the teleport you wish to use." << std::endl;
 		}
-
-		std::cout << std::endl << user() << ", choose the teleport you wish to use." << std::endl;
+		std::cout << std::endl << user() << ", you are not near any teleports." << std::endl;
 
 		return PromptUser();
 	}

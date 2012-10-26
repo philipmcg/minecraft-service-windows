@@ -12,14 +12,16 @@
 #include "windows.h"
 
 
-#define DEBUG
+#define DEBUG_
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG
 	char* argv2[4];
 	argv = argv2;
 	argv[0] = "";
-	argv[1] = "66.66.235.201";
+	//argv[1] = "66.66.235.201";
+	argv[1] = "66.67.63.160";
+	//argv[1] = "66.67.63.160";
 	argv[2] = "25500";
 	argv[3] = "login,PhilipM";
 	argc = 4;
@@ -29,7 +31,8 @@ int main(int argc, char* argv[])
 	{
 		if (argc != 4)
 		{
-			std::cerr << "Usage: chat_client <host> <port> <command>\n";
+			std::cerr << "Usage: MinecraftClient.exe <host> <port> <command>\n";
+			getchar();
 			return 1;
 		}
 

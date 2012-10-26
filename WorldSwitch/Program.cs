@@ -28,7 +28,9 @@ namespace WorldSwitch
             var controller = new Controller(args);
             bool success = controller.PerformCommand();
             if (!success)
+            {
                 Usage();
+            }
         }
     }
 
@@ -38,6 +40,7 @@ namespace WorldSwitch
         string inifile;
         string command;
         VariableBin var;
+        const string worlds_file = "worlds.csv";
 
         public Controller(string[] args)
         {
@@ -47,6 +50,12 @@ namespace WorldSwitch
 
             var = new VariableBin();
             var.LoadFromFile(inifile);
+
+            var table = Utilities.GCSV.GCSVMain.ReadFromFile(new DelimReader(), worlds_file);
+            foreach (var line in table)
+            {
+                var.Str[line["name"]] = line["path"];
+            }
         }
 
         public bool PerformCommand()
