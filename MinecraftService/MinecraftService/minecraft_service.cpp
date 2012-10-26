@@ -82,6 +82,10 @@ std::string GetPlayerFile(std::string world_path, std::string player) {
 	return path.string();
 }
 
+bool PlayerIsInWorld(std::string world_path, std::string player) {
+	return boost::filesystem::exists(GetPlayerFile(world_path, player));
+}
+
 // returns all valid pairs of worlds for the player to switch between
 vector_pair GetWorldsToSwitch(std::string player) {
 	auto worlds = WorldData::LoadWorldsFromFile(kWorldsFile);
@@ -89,7 +93,7 @@ vector_pair GetWorldsToSwitch(std::string player) {
 	std::vector<str> valid_worlds;
 	
 	BOOST_FOREACH(auto world, worlds)  {
-		if(boost::filesystem::exists(GetPlayerFile(world->path(), player)))
+		if(PlayerIsInWorld(world->path(), player))
 			valid_worlds.push_back(world->name());
 	}
 	for(auto it = valid_worlds.begin(); it != valid_worlds.end(); ++it) {
@@ -149,6 +153,9 @@ std::vector<Teleport> InvokeGetTeleports(std::string player) {
 	std::vector<Teleport> teleports;
 
 	BOOST_FOREACH(auto world, worlds) { 
+		if(!PlayerIsInWorld(world->path(), player)) 
+			continue;
+
 		auto world_name = world->name();
 		auto path = boost::filesystem::path(world->path());
 		auto coords = InvokeGetCoordinates(player, world_name);

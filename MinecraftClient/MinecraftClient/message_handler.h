@@ -136,7 +136,9 @@ public:	UserAction HandleUserInput() {
 			}
 			std::cout << std::endl << user() << ", choose the teleport you wish to use." << std::endl;
 		}
-		std::cout << std::endl << user() << ", you are not near any teleports." << std::endl;
+		else {
+			std::cout << std::endl << user() << ", you are not near any teleports." << std::endl;
+		}
 
 		return PromptUser();
 	}
