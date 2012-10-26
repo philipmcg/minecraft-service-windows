@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <boost/function.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include "../../shared/minecraft_shared.hpp"
 
 
@@ -71,6 +72,7 @@ protected:
 		foreach(it, actions_) {
 			(*it).OutputOption();
 		}
+		std::cout << "--> ";
 		std::string input = readline();
 		foreach(it, actions_) {
 			if(it->MatchesShortcut(input))
@@ -100,10 +102,16 @@ public:
 
 class MainPrompt : public UserActionInterface {
 public:	UserAction HandleUserInput() {
-		std::cout << user() << ", please enter a command." << std::endl;
+
+		if(this->message().num_params() > 0) {
+			std::string server_message = this->message()[0];
+			if(!server_message.empty())
+				std::cout << std::endl << server_message << std::endl;
+		}
+		std::cout << std::endl << user() << ", please enter a command." << std::endl;
 
 		AddAction("Teleport Menu", commands::get_teleports, "");
-		AddAction("Say", commands::say, "");
+//		AddAction("Say", commands::say, "");
 
 		return PromptUser();
 	}
@@ -121,10 +129,7 @@ public:	UserAction HandleUserInput() {
 			AddAction(text.str(), commands::teleport, teleport.ToString());
 		}
 
-		std::cout << user() << ", choose the teleport you wish to use." << std::endl;
-
-		AddAction("Teleport Menu", commands::get_teleports, "");
-		AddAction("Say", commands::say, "");
+		std::cout << std::endl << user() << ", choose the teleport you wish to use." << std::endl;
 
 		return PromptUser();
 	}
@@ -144,7 +149,7 @@ public:
 		
 		response = MapCommandToAction(msg);
 
-		if(response == commands::quit) {
+		if(boost::starts_with(response, commands::quit)) {
 			has_quit_ = true;
 			return;
 		}
@@ -161,6 +166,8 @@ public:
 			return HandleUserAction<SayPrompt>(msg);
 		else if(commands::get_teleports_response == cmd)
 			return HandleUserAction<TeleportsPrompt>(msg);
+		else if(commands::teleport_response == cmd)
+			return HandleUserAction<MainPrompt>(msg);
 		
 		return commands::quit;
 	}

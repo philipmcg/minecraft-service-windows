@@ -16,11 +16,11 @@
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG
-	argv = (char**)malloc(sizeof(char*) * 4);
+	char* argv2[4];
+	argv = argv2;
 	argv[0] = "";
 	argv[1] = "66.66.235.201";
 	argv[2] = "25500";
-	//argv[3] = "worldswitch,world1,world2,PhilipM";
 	argv[3] = "login,PhilipM";
 	argc = 4;
 #endif
@@ -57,10 +57,11 @@ int main(int argc, char* argv[])
 		c.send_message(initial_message);
 
 		while(!handler.has_quit()) {
-			Sleep(500);
+			Sleep(200);
 		}
-
 		std::cout << "quiting..." << std::endl;
+		Sleep(200);
+
 
 		c.close();
 		t.join();

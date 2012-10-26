@@ -121,6 +121,10 @@ public:
 	std::string const& command() const { return command_; }
 	std::string const& user() const { return user_; }
 
+	int num_params() {
+		return params_.size();
+	}
+
 	// returns the nth parameter, indexed from 0.  
 	// So if the message is "teleport,PhilipM,200,300"
 	// then msg[0] == 200 and msg[1] == 300
