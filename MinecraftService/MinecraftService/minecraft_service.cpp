@@ -138,6 +138,10 @@ Coordinates InvokeGetCoordinates(std::string player, std::string world) {
 const double kCloseEnoughToTeleportFrom = 20;
 
 
+bool PlayerIsNearTeleport(std::string player) {
+
+}
+
 // What needs to happen for the player to teleport:
 // client -> get_teleports -> server
 // server:
@@ -147,12 +151,12 @@ const double kCloseEnoughToTeleportFrom = 20;
 //     get all teleports
 //	   filter for valid teleports
 //     add to list
-std::vector<Teleport> InvokeGetTeleports(std::string player) {
+std::vector<TeleportPair> InvokeGetTeleports(std::string player) {
 
 	auto worlds = WorldData::LoadWorldsFromFile(kWorldsFile);
 
 	std::stringstream packed_teleports;
-	std::vector<Teleport> teleports;
+	std::vector<TeleportPair> teleports;
 
 	BOOST_FOREACH(auto world, worlds) { 
 		if(!PlayerIsInWorld(world->path(), player)) 
@@ -175,7 +179,7 @@ std::vector<Teleport> InvokeGetTeleports(std::string player) {
 				auto coords1 = Coordinates(loc1->get("x"),loc1->get("y"),loc1->get("z"));
 				auto coords2 = Coordinates(loc2->get("x"),loc2->get("y"),loc2->get("z"));
 				if(coords1.Within(player_coords, kCloseEnoughToTeleportFrom)) {
-					teleports.push_back(Teleport(world_name, loc1_name, loc2_name, coords1, coords2));
+					teleports.push_back(TeleportPair(world_name, loc1_name, loc2_name, coords1, coords2));
 				}
 			}
 		} // after this, the teleports vector is populated.
@@ -183,12 +187,12 @@ std::vector<Teleport> InvokeGetTeleports(std::string player) {
 	return teleports;
 }
 
-bool InvokeTeleport(std::string player, Teleport teleport) {
+bool InvokeTeleport(std::string player, TeleportPair teleport) {
 
 	auto teleports = InvokeGetTeleports(player);
 	foreach(possible_teleport, teleports) {
 		if(possible_teleport->Equals(teleport)) {
-			auto output = InvokeCommand(commands::teleport, list(3, player, possible_teleport->World, possible_teleport->Coords2.ToString()));
+			auto output = InvokeCommand(commands::teleport, list(3, player, possible_teleport->World, possible_teleport->Teleport2.Coords.ToString()));
 			return true;
 		}
 	}
@@ -231,7 +235,7 @@ std::string minecraft_service::handle_message(std::string message) {
 		return ResponseCommand(commands::worldswitch_response, player, list(1, str("Transferred inventory between worlds")));
 	}
 	else if(command == commands::teleport && numparams == 1) {
-		Teleport teleport(params[0]);
+		TeleportPair teleport(params[0]);
 		bool success = InvokeTeleport(player, teleport);
 		if(success)
 			return ResponseCommand(commands::teleport_response, player, list(1, str("Teleported successfully")));

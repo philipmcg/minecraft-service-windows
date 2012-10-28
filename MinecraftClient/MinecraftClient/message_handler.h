@@ -129,9 +129,9 @@ public:	UserAction HandleUserInput() {
 			auto teleports = util::tokenize(teleports_string, minecraft::kDelimiter3);
 
 			foreach(teleport_string, teleports) {
-				Teleport teleport(*teleport_string);
+				TeleportPair teleport(*teleport_string);
 				std::stringstream text;
-				text << teleport.World << ": " << teleport.Location1 << " to " << teleport.Location2;
+				text << teleport.World << ": " << teleport.Teleport1.Location << " to " << teleport.Teleport2.Location;
 				AddAction(text.str(), commands::teleport, teleport.ToString());
 			}
 			std::cout << std::endl << user() << ", choose the teleport you wish to use." << std::endl;

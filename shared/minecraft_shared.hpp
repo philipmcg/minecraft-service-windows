@@ -189,35 +189,49 @@ struct Coordinates {
 	}
 };
 
-// Represents a pair of teleport locations in a single world
-// that a player could teleport between.
 struct Teleport {
-	static const char delimiter = minecraft::kDelimiter2;
 	std::string World;
-	std::string Location1;
-	std::string Location2;
-	Coordinates Coords1;
-	Coordinates Coords2;
-
-	Teleport(std::string world, std::string location1, std::string location2, Coordinates coords1, Coordinates coords2) 
-		: World(world), Location1(location1), Location2(location2), Coords1(coords1), Coords2(coords2) { 
+	std::string Location;
+	Coordinates Coords;
+	Teleport() {}
+	Teleport(std::string world, std::string location, Coordinates coords) 
+		: World(world), Location(location), Coords(coords) {
 	}
 
-	Teleport(std::string packed) : Coords1(), Coords2() {
+	bool Equals(const Teleport& other) {
+		return other.World == World && other.Location == Location;
+	}
+};
+
+// Represents a pair of teleport locations in a single world
+// that a player could teleport between.
+struct TeleportPair {
+	static const char delimiter = minecraft::kDelimiter2;
+	std::string World;
+	Teleport Teleport1;
+	Teleport Teleport2;
+
+	TeleportPair(std::string world, std::string location1, std::string location2, Coordinates coords1, Coordinates coords2) 
+		: World(world), Teleport1(world, location1, coords1), Teleport2(world, location2, coords2) {
+	}
+
+	TeleportPair(std::string packed) {
 		auto unpacked = util::tokenize(packed, delimiter);
 		World = unpacked[0];
-		Location1 = unpacked[1];
-		Location2 = unpacked[2];
+		auto location1 = unpacked[1];
+		auto location2 = unpacked[2];
+		Teleport1 = Teleport(World, location1, Coordinates());
+		Teleport2 = Teleport(World, location2, Coordinates());
 	}
 
 	std::string ToString() {
 		std::stringstream stream;
-		stream << World << delimiter << Location1 << delimiter << Location2;
+		stream << World << delimiter << Teleport1.Location << delimiter << Teleport2.Location;
 		return stream.str();
 	}
 
-	bool Equals(const Teleport& other) {
-		return other.World == World && other.Location1 == Location1 && other.Location2 == Location2;
+	bool Equals(const TeleportPair& other) {
+		return other.World == World && Teleport1.Equals(other.Teleport1) && Teleport2.Equals(other.Teleport2);
 	}
 };
 
