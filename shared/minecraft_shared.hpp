@@ -38,9 +38,10 @@ namespace util  {
 }
 
 namespace commands {
-    const std::string delimiter = ",";
 
 // I can remove this macro use when I'm done defining new commands.
+// Each entry defines a command that can be passed between the client and server.
+// Generally, "response" commands are sent from server to client.
 #define COMMAND( x, n ) \
 	const std::string x = #x
 
@@ -62,11 +63,6 @@ namespace commands {
 	COMMAND(get_coords);
 #undef COMMAND
 
-    std::string make(std::string command, std::string param1) {
-        std::stringstream stream;
-        stream << command << delimiter << param1;
-        return stream.str();
-    }
 }
 
 
@@ -94,11 +90,17 @@ std::deque<std::string> tokenize(std::string text, char delimiter) {
 }
 
  
+// Message format that can be sent between client and server.
+// Messages consist of a command, username, and variable number of parameters.
+// All of these fields are stored as a comma-delimited string when passed to 
+// the client and server classes in the code.
 class MinecraftMessage {
+
+	static const char delimiter = minecraft::kDelimiter1;
 
 public:
 	MinecraftMessage(std::string command, const std::string& user, std::string params) : command_(command), user_(user) {
-		auto tokens = tokenize(params, ',');		
+		auto tokens = tokenize(params, delimiter);		
 		params_ = std::deque<std::string>(tokens);
 	}
 	MinecraftMessage(std::deque<std::string> tokens) {
@@ -111,7 +113,7 @@ public:
 	}
 
 	MinecraftMessage(std::string message) {
-		auto tokens = tokenize(message, ',');		
+		auto tokens = tokenize(message, delimiter);		
 		command_ = tokens.front();
 		tokens.pop_front();
 		user_ = tokens.front();
@@ -137,9 +139,9 @@ public:
 	// formats the message as a comma delimited string as it will be sent over the network
 	std::string AsMessage() {
 		std::stringstream stream;
-		stream << command_ << commands::delimiter << user_;
+		stream << command_ << delimiter << user_;
 		foreach(str, params_) {
-			stream << commands::delimiter << *str;
+			stream << delimiter << *str;
 		}
 		return stream.str();
 	}
@@ -187,6 +189,8 @@ struct Coordinates {
 	}
 };
 
+// Represents a pair of teleport locations in a single world
+// that a player could teleport between.
 struct Teleport {
 	static const char delimiter = minecraft::kDelimiter2;
 	std::string World;
@@ -216,6 +220,10 @@ struct Teleport {
 		return other.World == World && other.Location1 == Location1 && other.Location2 == Location2;
 	}
 };
+
+
+// Represents a pair of worlds (stored as world names)
+// that a player could switch between.
 struct WorldSwitch {
 	static const char delimiter = minecraft::kDelimiter2;
 	std::string World1;

@@ -25,9 +25,14 @@ const std::string kExecutable = "WorldSwitch.exe";
 const std::string kIniFile = "worldswitch.ini";
 const std::string kWorldsFile = "worlds.csv"; 
 
+// file specifications from minecraft server itself
+const std::string kPlayerFileExtension = ".dat"; 
+const std::string kPlayersDirectory = "players"; 
+
 // this will be in the world directory for each world
 const std::string kTeleportsFile = "teleports.csv"; 
 
+// Packs variable number of arguments into std::deque.
 std::deque<std::string> list( int Count, ... )
 {
 	va_list args;
@@ -39,12 +44,15 @@ std::deque<std::string> list( int Count, ... )
 	return list;
 }
 
+// Returns the beginning of a WorldSwitch command, with the exe and ini file specified.
 const std::stringstream begin_command() {
 	std::stringstream stream;
 	stream << kExecutable << " " << kIniFile << " ";
 	return stream;
 }
 
+// Returns a full WorldSwitch command, with the exe, ini file, 
+// command and parameters ready to be sent to the system call.
 std::string make_command(std::string command, std::deque<std::string> params) {
 	auto stream = begin_command();
 	stream << command << " ";
@@ -77,8 +85,8 @@ std::string InvokeCommand(std::string command, std::deque<std::string> params) {
 
 std::string GetPlayerFile(std::string world_path, std::string player) {
 	auto path = boost::filesystem::path(world_path);
-	path /= "players";
-	path /= (player + ".dat");
+	path /= kPlayersDirectory;
+	path /= (player + kPlayerFileExtension);
 	return path.string();
 }
 
@@ -129,12 +137,6 @@ Coordinates InvokeGetCoordinates(std::string player, std::string world) {
 
 const double kCloseEnoughToTeleportFrom = 20;
 
-std::string PackTeleportString(std::string world, std::string loc1, std::string loc2) {
-	std::stringstream stream;
-	stream << world << ":" << loc1 << ":" << loc2;
-	return stream.str();
-}
-
 
 // What needs to happen for the player to teleport:
 // client -> get_teleports -> server
@@ -158,7 +160,7 @@ std::vector<Teleport> InvokeGetTeleports(std::string player) {
 
 		auto world_name = world->name();
 		auto path = boost::filesystem::path(world->path());
-		auto coords = InvokeGetCoordinates(player, world_name);
+		auto player_coords = InvokeGetCoordinates(player, world_name);
 		auto teleports_path = path/"teleports.csv";
 
 		if(boost::filesystem::exists(teleports_path)) {
@@ -172,7 +174,7 @@ std::vector<Teleport> InvokeGetTeleports(std::string player) {
 				auto loc2_name = locations->get(tp->get()->get("b"))->get("name");
 				auto coords1 = Coordinates(loc1->get("x"),loc1->get("y"),loc1->get("z"));
 				auto coords2 = Coordinates(loc2->get("x"),loc2->get("y"),loc2->get("z"));
-				if(coords1.Within(coords, kCloseEnoughToTeleportFrom)) {
+				if(coords1.Within(player_coords, kCloseEnoughToTeleportFrom)) {
 					teleports.push_back(Teleport(world_name, loc1_name, loc2_name, coords1, coords2));
 				}
 			}
