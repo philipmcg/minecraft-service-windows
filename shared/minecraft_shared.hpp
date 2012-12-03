@@ -214,6 +214,9 @@ struct TeleportPair {
 	TeleportPair(std::string world, std::string location1, std::string location2, Coordinates coords1, Coordinates coords2) 
 		: World(world), Teleport1(world, location1, coords1), Teleport2(world, location2, coords2) {
 	}
+	TeleportPair(std::string world, Teleport teleport1, Teleport teleport2) 
+		: World(world), Teleport1(teleport1), Teleport2(teleport2) {
+	}
 
 	TeleportPair(std::string packed) {
 		auto unpacked = util::tokenize(packed, delimiter);

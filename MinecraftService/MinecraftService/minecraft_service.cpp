@@ -32,6 +32,9 @@ const std::string kPlayersDirectory = "players";
 // this will be in the world directory for each world
 const std::string kTeleportsFile = "teleports.csv"; 
 
+const double kCloseEnoughToTeleportFrom = 20;
+
+
 // Packs variable number of arguments into std::deque.
 std::deque<std::string> list( int Count, ... )
 {
@@ -93,6 +96,42 @@ std::string GetPlayerFile(std::string world_path, std::string player) {
 bool PlayerIsInWorld(std::string world_path, std::string player) {
 	return boost::filesystem::exists(GetPlayerFile(world_path, player));
 }
+std::map<std::string, Teleport> LoadTeleports(WorldData world) {
+	auto path = boost::filesystem::path(world.path());
+	auto teleports_path = path/kTeleportsFile;
+
+	std::map<std::string, Teleport> teleports;
+	
+	if(boost::filesystem::exists(teleports_path)) {
+		auto teleports_csv = gcsv::read(teleports_path.string());
+		auto locations = teleports_csv->get("locations");
+		auto world_teleports = teleports_csv->get("teleports");
+		for(auto it = locations->begin(); it != locations->end(); ++it) {
+			auto loc = *it;
+			auto name = loc->get("name");
+			auto coords = Coordinates(loc->get("x"),loc->get("y"),loc->get("z"));
+			teleports.insert(std::make_pair(name, Teleport(world.name(), name, coords)));
+		}
+	}
+	return teleports;
+}
+
+Coordinates InvokeGetCoordinates(std::string player, std::string world) {
+	auto coords = InvokeCommand(commands::get_coords, list(2, player, world));
+	return Coordinates(coords);
+}
+
+// Returns true if player is near any teleport location
+bool PlayerIsNearAnyTeleport(std::string player, WorldData world) {
+	auto player_coords = InvokeGetCoordinates(player, world.name());
+	auto locations = LoadTeleports(world);
+	BOOST_FOREACH(auto loc, locations) {
+		if(loc.second.Coords.Within(player_coords, kCloseEnoughToTeleportFrom))
+			return true;
+	}
+	return false;
+}
+
 
 // returns all valid pairs of worlds for the player to switch between
 vector_pair GetWorldsToSwitch(std::string player) {
@@ -102,7 +141,8 @@ vector_pair GetWorldsToSwitch(std::string player) {
 	
 	BOOST_FOREACH(auto world, worlds)  {
 		if(PlayerIsInWorld(world->path(), player))
-			valid_worlds.push_back(world->name());
+			if(PlayerIsNearAnyTeleport(player, *(world.get())))
+				valid_worlds.push_back(world->name());
 	}
 	for(auto it = valid_worlds.begin(); it != valid_worlds.end(); ++it) {
 		for(auto k = it; k != valid_worlds.end(); ++k) {
@@ -130,17 +170,6 @@ std::string GetPackedWorldsToSwitch(std::string player) {
 void InvokeWorldSwitch(std::string player, WorldSwitch worldswitch) {
 	auto output = InvokeCommand(commands::worldswitch, list(3, player, worldswitch.World1, worldswitch.World2));
 }
-Coordinates InvokeGetCoordinates(std::string player, std::string world) {
-	auto coords = InvokeCommand(commands::get_coords, list(2, player, world));
-	return Coordinates(coords);
-}
-
-const double kCloseEnoughToTeleportFrom = 20;
-
-
-bool PlayerIsNearTeleport(std::string player) {
-
-}
 
 // What needs to happen for the player to teleport:
 // client -> get_teleports -> server
@@ -164,22 +193,17 @@ std::vector<TeleportPair> InvokeGetTeleports(std::string player) {
 
 		auto world_name = world->name();
 		auto path = boost::filesystem::path(world->path());
+		auto teleports_path = path/kTeleportsFile;
 		auto player_coords = InvokeGetCoordinates(player, world_name);
-		auto teleports_path = path/"teleports.csv";
-
+		auto locations = LoadTeleports(*(world.get()));
 		if(boost::filesystem::exists(teleports_path)) {
 			auto teleports_csv = gcsv::read(teleports_path.string());
-			auto locations = teleports_csv->get("locations");
 			auto world_teleports = teleports_csv->get("teleports");
 			for(auto tp = world_teleports->begin(); tp != world_teleports->end(); ++tp) {
-				auto loc1 = locations->get(tp->get()->get("a"));
-				auto loc2 = locations->get(tp->get()->get("b"));
-				auto loc1_name = locations->get(tp->get()->get("a"))->get("name");
-				auto loc2_name = locations->get(tp->get()->get("b"))->get("name");
-				auto coords1 = Coordinates(loc1->get("x"),loc1->get("y"),loc1->get("z"));
-				auto coords2 = Coordinates(loc2->get("x"),loc2->get("y"),loc2->get("z"));
-				if(coords1.Within(player_coords, kCloseEnoughToTeleportFrom)) {
-					teleports.push_back(TeleportPair(world_name, loc1_name, loc2_name, coords1, coords2));
+				auto loc1 = locations.find(tp->get()->get("a"))->second;
+				auto loc2 = locations.find(tp->get()->get("b"))->second;
+				if(loc1.Coords.Within(player_coords, kCloseEnoughToTeleportFrom)) {
+					teleports.push_back(TeleportPair(world_name, loc1, loc2));
 				}
 			}
 		} // after this, the teleports vector is populated.
